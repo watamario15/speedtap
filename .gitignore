@@ -1,0 +1,14 @@
+*_mario*
+save.bin
+hsptmp
+obj
+packfile
+*.ax
+*.dpm
+*.exe
+*.i
+*.js
+*.wasm
+*.data
+*.cpp
+*.html

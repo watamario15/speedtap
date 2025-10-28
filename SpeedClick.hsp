@@ -1,0 +1,261 @@
+/* ～変数紹介(載ってない変数はそれっぽく察してね)～
+ * mmlist: 音声ファイルの存在確認リスト(mmload_opt と mmplay_opt で使用)
+ * posx: 画像のx座標移動(反動時逆転)
+ * posy: 画像のy座標移動(反動時逆転)
+ * a: 画像を動かす大きさ(絶対値)
+ * boxx: 画像を表示するX座標
+ * boxy: 画像を表示するY座標
+ * clk: クリックの認識
+ * stg: 的のクリック回数(stage)
+ * time: プレイ時間／残り時間
+ * lv: 現在のレベル
+ * besttime: タイムアタック最高記録(セーブデータにも使用)
+ * beststg: カウントダウン最高記録(セーブデータにも使用)
+ * mode: ゲームモード(0=Time Attack, 1=Countdown)
+ */
+#packopt name "SpeedClick"
+#packopt version "version.txt"
+#packopt icon "app.ico"
+
+	dim mmlist,7
+	assets_dir="assets/"
+	mmload_opt assets_dir+"title.mp3",0,1
+	mmload_opt assets_dir+"bgm.mp3",1,1
+	mmload_opt assets_dir+"result.mp3",2,1
+	mmload_opt assets_dir+"ok.wav",3,0
+	mmload_opt assets_dir+"countdown.wav",4,0
+	mmload_opt assets_dir+"pause.wav",5,0
+	mmload_opt assets_dir+"go.wav",6,0
+	celload assets_dir+"target.bmp",1
+	celdiv 1,100,100
+	randomize
+
+*top
+	mmstop
+	cls 4
+	lv=1 : posx=0 : posy=0 : a=0 : time=0 : stg=-1 : prev_ok=-32768
+	exist "save.bin"
+	if strsize!-1 {
+		bload "save.bin",besttime,4
+		bload "save.bin",beststg,4,4
+	} else {
+		besttime=-1
+		beststg=-1
+	}
+	mmplay_opt 0
+	
+	title "早押しゲーム"
+	font msgothic,64,1
+	pos 120,50
+	color 255,255,0
+	mes "早押しゲーム"
+	
+	objmode 2
+	objsize 256,64
+	font msgothic,36,1
+	pos 640/2-256,155
+	button "Time Attack",*timeattack
+	pos 640/2,155
+	button "Countdown",*countdown
+	
+	pos 32,260
+	color 0,255,0
+	font msgothic,20
+	if besttime=-1 : mes "タイムアタック記録: なし" : else : mes "タイムアタック記録: "+besttime+" 秒"
+	if beststg=-1 : mes "カウントダウン記録: なし" : else : mes "カウントダウン記録: "+beststg+" 回"
+	mes "\nタイムアタック: 的を50回クリックする速度を競います。"
+	mes "カウントダウン: 20秒以内に的をクリックした回数を競います。"
+	mes "10回タップごとに難易度が最大5まで上がります。"
+	mes "スペースキーを押すと一時停止します。"
+	mes "save.binファイルを消すと記録を消去できます。"
+	stop
+
+*timeattack
+	mode=0
+	goto *prepare
+
+*countdown
+	mode=1
+	goto *prepare
+	
+*prepare
+	mmstop
+	clrobj
+	font msgothic,64,1
+	await 1
+	repeat
+		if cnt>=3 : break
+		mmplay_opt 4
+		color 0,0,0
+		boxf
+		pos 300,200
+		color 255,255,255
+		print 3-cnt
+		await 1000
+	loop
+	mmplay_opt 6
+	mmplay_opt 1
+	gosub *nextstage
+*main
+	repeat
+		title "早押しゲーム "+stg+"回 "+time+"秒 Lv."+lv
+		
+		redraw 0
+		;color 0,97,189
+		color 0,0,0
+		boxf
+		
+		gosub *move
+		pos boxx,boxy
+		gmode 2
+		celput 1
+		if cnt<prev_ok+8 : pos prev_boxx,prev_boxy : celput 1,1
+		font msgothic,32
+		pos 0,0 : color 255,255,0
+		if mode=0 : mes ""+time+"秒 "+stg+"/50回 Lv."+lv : else : mes ""+time+"秒 "+stg+"回 Lv."+lv
+		redraw 1
+		
+		stick clk
+		if clk&256 {
+			if mousex>=boxx & mousex<=boxx+100 & mousey>=boxy & mousey<=boxy+100 {
+				mmplay_opt 3
+				prev_boxx=boxx
+				prev_boxy=boxy
+				prev_ok=cnt
+				gosub *nextstage
+				if cleared : break
+			}
+		}
+		if clk&16 : gosub *pause
+		if gvup : break
+		
+		await 16
+		
+		if mode=0 {
+			time=cnt/62
+		} else {
+			time=20-cnt/62
+			if time<=0 : cleared=1 : break
+		}
+	loop
+	if gvup : gvup=0 : goto *top
+	if cleared : goto *gameclear
+	stop
+	
+*move
+	if boxx<0 | boxx>640-100 : posx=-posx
+	if boxy<0 | boxy>480-100 : posy=-posy
+	boxx=boxx+posx
+	boxy=boxy+posy
+	return
+	
+*nextstage
+	stg=stg+1
+	if resume=0 & stg>0 & stg\10=0 & lv<5 : a++ : lv++
+	if mode=0 & stg=50 : cleared=1 : return
+	
+	boxx=rnd(640-100)
+	boxy=rnd(480-100)
+	orient=rnd(8)
+	if orient=0 : posx=a : posy=a
+	if orient=1 : posx=-a : posy=a
+	if orient=2 : posx=a : posy=-a
+	if orient=3 : posx=-a : posy=-a
+	if orient=4 : posx=a*3/2 : posy=0
+	if orient=5 : posx=-a*3/2 : posy=0
+	if orient=6 : posx=0 : posy=a*3/2
+	if orient=7 : posx=0 : posy=-a*3/2
+	return
+	
+*pause
+	title "早押しゲーム "+stg+"回 "+time+"秒 Lv."+lv
+	mmplay_opt 5
+	pos 280,200
+	mes "PAUSE"
+	font msgothic,20 : color 0,255,0
+	pos 130,250
+	mes "Spaceキー:再開　Escキー:タイトルに戻る"
+	mes "再開するとマリオの場所は変わります。"
+	repeat
+		stick key
+		if key&16 : resume=1 : break
+		if key&128 : gvup=1 : break
+		await 16
+	loop
+	if resume : stg=stg-1 : mmplay_opt 5 : gosub *nextstage : resume=0
+	return
+
+*gameclear
+	title "早押しゲーム "+stg+"回 "+time+"秒 Lv."+lv
+	mmstop
+	mmplay_opt 2
+	
+	color 0,0,0
+	boxf
+	pos boxx,boxy
+	if mode=1 : celput 1 : else : celput 1,cleared
+	font msgothic,32
+	pos 0,0
+	color 255,255,0
+	if mode=0 : mes ""+time+"秒 "+stg+"/50回 Lv."+lv : else : mes ""+time+"秒 "+stg+"回 Lv."+lv
+	
+	font msgothic,64,1
+	pos 180,200
+	mes "FINISH!!"
+	await 2000
+*result
+	cls 4
+	cleared=0
+	needsave=0
+	if mode=0 {
+		if besttime>time | besttime<0 {
+			needsave=1
+			besttime=time
+			comment="セーブして"
+		} else {
+			comment=""
+		}
+	} else {
+		if beststg<stg {
+			needsave=1
+			beststg=stg
+			comment="セーブして"
+		} else {
+			comment=""
+		}
+	}
+	color 255,255,0
+	font msgothic,96,1
+	pos 170,80
+	mes "RESULT"
+	
+	color 0,255,0
+	font msgothic,32
+	pos 180,210
+	if mode=0 {
+		mes "かかった時間: "+time+"秒"
+		mes "最高記録: "+besttime+"秒"
+	} else {
+		mes "回数: "+stg+"回"
+		mes "最高記録: "+beststg+"回"
+	}
+	
+	objsize 360,60
+	pos 640/2-360/2,320
+	button ""+comment+"タイトルへ",*saving
+	stop
+	
+*saving
+	if needsave : bsave "save.bin",besttime,4 : bsave "save.bin",beststg,4,4
+	goto *top
+
+// 音声ファイルが存在する場合のみ mmload する
+#deffunc mmload_opt str mmload_opt_file, int mmload_opt_id, int mmload_opt_mode
+	exist mmload_opt_file
+	if strsize!-1 : mmlist(mmload_opt_id)=1 : mmload mmload_opt_file, mmload_opt_id, mmload_opt_mode
+	return
+
+// mmload_opt で読み込めていた場合のみ mmplay する
+#deffunc mmplay_opt int mmplay_opt_id
+	if mmlist(mmplay_opt_id) : mmplay mmplay_opt_id
+	return
