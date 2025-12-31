@@ -107,14 +107,83 @@
       <progress value="0" max="100" id="progress" hidden></progress>
     </div>
 
-    
-    <div class="emscripten_border">
+    <button style="width: 240px; height: 50px;" onclick="openFullscreen(document.getElementById('canvas-container'));">全画面表示</button>
+    <button style="width: 240px; height: 50px;" id="btn_flg">センサーを許可する</button>
+    <div id="canvas-container" class="emscripten_border">
       <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
     </div>
     <textarea id="output" rows="8"></textarea>
-    <button style="width: 240px; height: 50px;" id="btn_flg">センサーを許可する</button>
 
     <script type='text/javascript'>
+      function openFullscreen(elem) {
+        if (elem.requestFullscreen) {
+          elem.requestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+          elem.mozRequestFullScreen();
+        } else if (elem.webkitRequestFullscreen) {
+          elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) {
+          elem.msRequestFullscreen();
+        }
+      }
+
+      // 全画面変更時にキャンバスサイズを調整
+      function adjustCanvasSize() {
+        var canvas = document.getElementById('canvas');
+        var container = document.getElementById('canvas-container');
+        var isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        
+        if (isFullscreen) {
+          setTimeout(function() {
+            var screenWidth = window.innerWidth;
+            var screenHeight = window.innerHeight;
+            var gameAspect = 1280 / 720; // ゲームのアスペクト比
+            var screenAspect = screenWidth / screenHeight;
+            
+            var newWidth, newHeight;
+            if (screenAspect > gameAspect) {
+              // 画面が横長：高さに合わせる
+              newHeight = screenHeight;
+              newWidth = Math.floor(screenHeight * gameAspect);
+            } else {
+              // 画面が縦長：幅に合わせる
+              newWidth = screenWidth;
+              newHeight = Math.floor(screenWidth / gameAspect);
+            }
+            
+            canvas.style.width = newWidth + 'px';
+            canvas.style.height = newHeight + 'px';
+          }, 100);
+        } else {
+          canvas.style.width = '';
+          canvas.style.height = '';
+        }
+      }
+
+      // 画面回転時にも再調整
+      function handleOrientationChange() {
+        var isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        if (isFullscreen) {
+          adjustCanvasSize();
+        }
+      }
+
+      document.addEventListener('fullscreenchange', adjustCanvasSize);
+      document.addEventListener('webkitfullscreenchange', adjustCanvasSize);
+      document.addEventListener('mozfullscreenchange', adjustCanvasSize);
+      document.addEventListener('MSFullscreenChange', adjustCanvasSize);
+      
+      // 画面回転対応
+      window.addEventListener('orientationchange', function() {
+        setTimeout(handleOrientationChange, 200);
+      });
+      window.addEventListener('resize', function() {
+        var isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        if (isFullscreen) {
+          setTimeout(adjustCanvasSize, 100);
+        }
+      });
+
       var statusElement = document.getElementById('status');
       var progressElement = document.getElementById('progress');
       var spinnerElement = document.getElementById('spinner');
@@ -199,7 +268,7 @@ Module.expectedDataFileDownloads++;
     }
     var PACKAGE_NAME = 'speedtap.data';
     var REMOTE_PACKAGE_NAME = (Module['filePackagePrefixURL'] || '') + 'speedtap.data';
-    var REMOTE_PACKAGE_SIZE = 14276019;
+    var REMOTE_PACKAGE_SIZE = 14243193;
     var PACKAGE_UUID = '51f84d03-0c74-4552-ac13-924e79e76977';
   
     function fetchRemotePackage(packageName, packageSize, callback, errback) {
@@ -300,26 +369,25 @@ function assert(check, msg) {
       },
     };
 
-      new DataRequest(0, 9135, 0, 0).open('GET', 'speedtap.ax');
-      new DataRequest(9135, 2425728, 0, 0).open('GET', 'bgm.mp3');
-      new DataRequest(2425728, 6474026, 0, 0).open('GET', 'config.mp3');
-      new DataRequest(6474026, 6476739, 0, 0).open('GET', 'continue.png');
-      new DataRequest(6476739, 6484764, 0, 0).open('GET', 'countdown.png');
-      new DataRequest(6484764, 6558618, 0, 0).open('GET', 'countdown.wav');
-      new DataRequest(6558618, 6566835, 0, 0).open('GET', 'delback.png');
-      new DataRequest(6566835, 6577866, 0, 0).open('GET', 'delctdn.png');
-      new DataRequest(6577866, 6589320, 0, 0).open('GET', 'deltatk.png');
-      new DataRequest(6589320, 6983522, 0, 0).open('GET', 'go.wav');
-      new DataRequest(6983522, 7124854, 0, 0).open('GET', 'ok.wav');
-      new DataRequest(7124854, 7128394, 0, 0).open('GET', 'pause.png');
-      new DataRequest(7128394, 7264798, 0, 0).open('GET', 'pause.wav');
-      new DataRequest(7264798, 7268876, 0, 0).open('GET', 'reset.png');
-      new DataRequest(7268876, 12404894, 0, 0).open('GET', 'result.mp3');
-      new DataRequest(12404894, 12412162, 0, 0).open('GET', 'save.png');
-      new DataRequest(12412162, 12417584, 0, 0).open('GET', 'target.png');
-      new DataRequest(12417584, 12424928, 0, 0).open('GET', 'timeattack.png');
-      new DataRequest(12424928, 14268292, 0, 0).open('GET', 'title.mp3');
-      new DataRequest(14268292, 14276019, 0, 0).open('GET', 'totitle.png');
+      new DataRequest(0, 9401, 0, 0).open('GET', 'speedtap.ax');
+      new DataRequest(9401, 2425994, 0, 0).open('GET', 'bgm.mp3');
+      new DataRequest(2425994, 6474292, 0, 0).open('GET', 'config.mp3');
+      new DataRequest(6474292, 6476101, 0, 0).open('GET', 'continue.png');
+      new DataRequest(6476101, 6481390, 0, 0).open('GET', 'countdown.png');
+      new DataRequest(6481390, 6555244, 0, 0).open('GET', 'countdown.wav');
+      new DataRequest(6555244, 6560954, 0, 0).open('GET', 'delback.png');
+      new DataRequest(6560954, 6568952, 0, 0).open('GET', 'delctdn.png');
+      new DataRequest(6568952, 6577345, 0, 0).open('GET', 'deltatk.png');
+      new DataRequest(6577345, 6582776, 0, 0).open('GET', 'giveup.png');
+      new DataRequest(6582776, 6976978, 0, 0).open('GET', 'go.wav');
+      new DataRequest(6976978, 7118310, 0, 0).open('GET', 'ok.wav');
+      new DataRequest(7118310, 7119772, 0, 0).open('GET', 'pause.png');
+      new DataRequest(7119772, 7256176, 0, 0).open('GET', 'pause.wav');
+      new DataRequest(7256176, 7257362, 0, 0).open('GET', 'reset.png');
+      new DataRequest(7257362, 12393380, 0, 0).open('GET', 'result.mp3');
+      new DataRequest(12393380, 12395015, 0, 0).open('GET', 'target.png');
+      new DataRequest(12395015, 12399829, 0, 0).open('GET', 'timeattack.png');
+      new DataRequest(12399829, 14243193, 0, 0).open('GET', 'title.mp3');
 
 
     function processPackageData(arrayBuffer) {
@@ -342,17 +410,16 @@ function assert(check, msg) {
           DataRequest.prototype.requests["delback.png"].onload();
           DataRequest.prototype.requests["delctdn.png"].onload();
           DataRequest.prototype.requests["deltatk.png"].onload();
+          DataRequest.prototype.requests["giveup.png"].onload();
           DataRequest.prototype.requests["go.wav"].onload();
           DataRequest.prototype.requests["ok.wav"].onload();
           DataRequest.prototype.requests["pause.png"].onload();
           DataRequest.prototype.requests["pause.wav"].onload();
           DataRequest.prototype.requests["reset.png"].onload();
           DataRequest.prototype.requests["result.mp3"].onload();
-          DataRequest.prototype.requests["save.png"].onload();
           DataRequest.prototype.requests["target.png"].onload();
           DataRequest.prototype.requests["timeattack.png"].onload();
           DataRequest.prototype.requests["title.mp3"].onload();
-          DataRequest.prototype.requests["totitle.png"].onload();
 
           Module['removeRunDependency']('datafile_speedtap.data');
 
