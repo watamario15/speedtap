@@ -1,12 +1,12 @@
 ; 行の先頭部分に「;」（半角セミコロン）を付けると、その行はスキップします。
-_FILEVERSION=2.0.0.0
-_PRODUCTVERSION=2.0.0.0
+_FILEVERSION=2.1.0.0
+_PRODUCTVERSION=2.1.0.0
 Comments=モグラ叩き的なゲーム
 CompanyName=watamario15
 FileDescription=早押しゲーム
-FileVersion=2.0
+FileVersion=2.1
 InternalName=早押しゲーム
 LegalCopyright=Public Domain (CC0-1.0)
 OriginalFilename=SpeedClick.exe
 ProductName=早押しゲーム
-ProductVersion=2.0
+ProductVersion=2.1

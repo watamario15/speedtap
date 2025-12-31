@@ -5,13 +5,13 @@
  * a: 画像を動かす大きさ(絶対値)
  * boxx: 画像を表示するX座標
  * boxy: 画像を表示するY座標
- * clk: クリックの認識
+ * key: 入力認識
  * stg: 的のクリック回数(stage)
  * time: プレイ時間／残り時間
  * lv: 現在のレベル
  * besttime: タイムアタック最高記録(セーブデータにも使用)
  * beststg: カウントダウン最高記録(セーブデータにも使用)
- * mode: ゲームモード(0=Time Attack, 1=Countdown)
+ * mode: ゲームモード(0=未選択, 1=Time Attack, 2=Countdown)
  */
 #packopt name "SpeedClick"
 #packopt version "version.txt"
@@ -26,14 +26,13 @@
 	mmload_opt assets_dir+"countdown.wav",4,0
 	mmload_opt assets_dir+"pause.wav",5,0
 	mmload_opt assets_dir+"go.wav",6,0
-	celload assets_dir+"target.bmp",1
-	celdiv 1,100,100
+	celload assets_dir+"target.bmp",1 : celdiv 1,100,100
 	randomize
 
 *top
 	mmstop
 	cls 4
-	lv=1 : posx=0 : posy=0 : a=0 : time=0 : stg=-1 : prev_ok=-32768
+	mode=0 : lv=1 : posx=0 : posy=0 : a=0 : time=0 : stg=-1 : prev_ok=-32768
 	exist "save.bin"
 	if strsize!-1 {
 		bload "save.bin",besttime,4
@@ -71,11 +70,11 @@
 	stop
 
 *timeattack
-	mode=0
+	mode=1
 	goto *prepare
 
 *countdown
-	mode=1
+	mode=2
 	goto *prepare
 	
 *prepare
@@ -112,7 +111,7 @@
 		if cnt<prev_ok+8 : pos prev_boxx,prev_boxy : celput 1,1
 		font msgothic,32
 		pos 0,0 : color 255,255,0
-		if mode=0 : mes ""+time+"秒 "+stg+"/50回 Lv."+lv : else : mes ""+time+"秒 "+stg+"回 Lv."+lv
+		if mode=1 : mes ""+time+"秒 "+stg+"/50回 Lv."+lv : else : mes ""+time+"秒 "+stg+"回 Lv."+lv
 		redraw 1
 		
 		stick clk
@@ -131,7 +130,7 @@
 		
 		await 16
 		
-		if mode=0 {
+		if mode=1 {
 			time=cnt/62
 		} else {
 			time=20-cnt/62
@@ -152,7 +151,7 @@
 *nextstage
 	stg=stg+1
 	if resume=0 & stg>0 & stg\10=0 & lv<5 : a++ : lv++
-	if mode=0 & stg=50 : cleared=1 : return
+	if mode=1 & stg=50 : cleared=1 : return
 	
 	boxx=rnd(640-100)
 	boxy=rnd(480-100)
@@ -193,11 +192,11 @@
 	color 0,0,0
 	boxf
 	pos boxx,boxy
-	if mode=1 : celput 1 : else : celput 1,cleared
+	if mode=1 : celput 1,cleared : else : celput 1
 	font msgothic,32
 	pos 0,0
 	color 255,255,0
-	if mode=0 : mes ""+time+"秒 "+stg+"/50回 Lv."+lv : else : mes ""+time+"秒 "+stg+"回 Lv."+lv
+	if mode=1 : mes ""+time+"秒 "+stg+"/50回 Lv."+lv : else : mes ""+time+"秒 "+stg+"回 Lv."+lv
 	
 	font msgothic,64,1
 	pos 180,200
@@ -206,47 +205,54 @@
 *result
 	cls 4
 	cleared=0
-	needsave=0
-	if mode=0 {
+	if mode=1 {
 		if besttime>time | besttime<0 {
-			needsave=1
 			besttime=time
-			comment="セーブして"
-		} else {
-			comment=""
+			bsave "save.bin",besttime,4
+			bsave "save.bin",beststg,4,4
+			font msgothic,48
+			color 255,255,0
+			pos 200,370 : print "記録更新！"
 		}
 	} else {
 		if beststg<stg {
-			needsave=1
 			beststg=stg
-			comment="セーブして"
-		} else {
-			comment=""
+			bsave "save.bin",besttime,4
+			bsave "save.bin",beststg,4,4
+			font msgothic,48
+			color 255,255,0
+			pos 200,370 : print "記録更新！"
 		}
 	}
 	color 255,255,0
-	font msgothic,96,1
-	pos 170,80
+	font msgothic,100,1
+	pos 160,80
 	mes "RESULT"
 	
 	color 0,255,0
 	font msgothic,32
 	pos 180,210
-	if mode=0 {
-		mes "かかった時間: "+time+"秒"
+	if mode=1 {
+		mes "所要時間: "+time+"秒"
 		mes "最高記録: "+besttime+"秒"
 	} else {
 		mes "回数: "+stg+"回"
 		mes "最高記録: "+beststg+"回"
 	}
+
+	color 0,255,0
+	font msgothic,25
+	pos 180,300
+	mes "-- クリックで進む --"
 	
-	objsize 360,60
-	pos 640/2-360/2,320
-	button ""+comment+"タイトルへ",*saving
-	stop
-	
-*saving
-	if needsave : bsave "save.bin",besttime,4 : bsave "save.bin",beststg,4,4
+	repeat
+		stick key
+		if key&(16|32) : break
+		if key&256 {
+			if mousex>=0 & mousex<640 & mousey>=0 & mousey<480 : break
+		}
+		await 16
+	loop
 	goto *top
 
 // 音声ファイルが存在する場合のみ mmload する

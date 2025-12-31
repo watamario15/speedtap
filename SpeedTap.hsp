@@ -5,18 +5,19 @@
  * a: 画像を動かす大きさ(絶対値)
  * boxx: 画像を表示するX座標
  * boxy: 画像を表示するY座標
- * clk: タップの認識
+ * key: 入力認識
  * stg: 的のタップ回数(stage)
  * time: プレイ時間／残り時間
  * lv: 現在のレベル
  * besttime: タイムアタック最高記録(セーブデータにも使用)
  * beststg: カウントダウン最高記録(セーブデータにも使用)
- * mode: ゲームモード(0=Time Attack, 1=Countdown)
+ * mode: ゲームモード(0=未選択, 1=Time Attack, 2=Countdown)
  */
 #include "hsp3dish.as"
 
 	info_os=sysinfo(0)
 	if instr(info_os,0,"iOS")=-1 & instr(info_os,0,"android")=-1 & instr(info_os,0,"Emscripten")=-1 : assets_dir="data/" : else : assets_dir=""
+	scrx=1280 : scry=720
 
 	dim mmlist,8
 	mmload_opt assets_dir+"title.mp3",0,1
@@ -28,61 +29,22 @@
 	mmload_opt assets_dir+"config.mp3",6,1
 	mmload_opt assets_dir+"go.wav",7,0
 
-	celload assets_dir+"target.png",1
-	celdiv 1,200,200
-	//
-	buffer 2
-	pos 0,0
-	picload assets_dir+"timeattack.png",1
-	pos 0,0
-	//
-	buffer 3
-	pos 0,0
-	picload assets_dir+"countdown.png",1
-	pos 0,0
-	//
-	buffer 4
-	pos 0,0
-	picload assets_dir+"reset.png",1
-	pos 0,0
-	//
-	buffer 5
-	pos 0,0
-	picload assets_dir+"deltatk.png",1
-	//
-	buffer 6
-	pos 0,0
-	picload assets_dir+"delctdn.png",1
-	//
-	buffer 7
-	pos 0,0
-	picload assets_dir+"delback.png",1
-	//
-	buffer 8
-	pos 0,0
-	picload assets_dir+"pause.png",1
-	//
-	buffer 9
-	pos 0,0
-	picload assets_dir+"continue.png",1
-	pos 0,0
-	//
-	buffer 10
-	pos 0,0
-	picload assets_dir+"totitle.png",1
-	pos 0,0
-	//
-	buffer 11
-	pos 0,0
-	picload assets_dir+"save.png",1
-	pos 0,0
-	//
+	celload assets_dir+"target.png",1 : celdiv 1,200,200
+	celload assets_dir+"pause.png",8
+	buffer 2 : pos 0,0 : picload assets_dir+"timeattack.png",1
+	buffer 3 : pos 0,0 : picload assets_dir+"countdown.png",1
+	buffer 4 : pos 0,0 : picload assets_dir+"reset.png",1
+	buffer 5 : pos 0,0 : picload assets_dir+"deltatk.png",1
+	buffer 6 : pos 0,0 : picload assets_dir+"delctdn.png",1
+	buffer 7 : pos 0,0 : picload assets_dir+"delback.png",1
+	buffer 9 : pos 0,0 : picload assets_dir+"continue.png",1
+	buffer 10 : pos 0,0 : picload assets_dir+"giveup.png",1
 	gsel 0
 	randomize
 *top
 	mmstop
 	clrobj
-	lv=1 : posx=0 : posy=0 : a=0 : time=0 : stg=-1 : prev_ok=-32768
+	lv=1 : posx=0 : posy=0 : a=0 : time=0 : stg=-1 : prev_ok=-32768 : mode=0
 	exist "save.bin"
 	if strsize!-1 {
 		bload "save.bin",besttime,4
@@ -95,17 +57,16 @@
 	mmplay_opt 0
 	
 	objsize 512,128
-	objimage 2,0,0
-	pos 1280/2-512,235
-	button "",*timeattack
-	objimage 3,0,0
-	pos 1280/2,235
-	button "",*countdown
-
+	objimage 2,,,,128
+	pos scrx/2-512,235
+	button gosub "",*timeattack
+	objimage 3,,,,128
+	pos scrx/2,235
+	button gosub "",*countdown
 	objsize 128,128
-	objimage 4,0,0
-	pos 1280-128,720-128
-	button "",*options
+	objimage 4,,,128
+	pos scrx-128,scry-128
+	button gosub "",*options
 
 	title "早押しゲーム"
 	repeat
@@ -121,19 +82,12 @@
 		mes "カウントダウン: 20秒以内に的をタップした回数を競います。"
 		mes "10回タップごとに難易度が最大5まで上がります。"
 		redraw 1
+		if mode | toopt : break
 		await 16
 	loop
-	stop
+	if toopt : toopt=0 : goto *option
 
-*timeattack
-	mode=0
-	goto *prepare
-
-*countdown
-	mode=1
-	goto *prepare
-
-*prepare
+	// カウントダウン
 	mmstop
 	clrobj
 	font "",128,1
@@ -151,12 +105,9 @@
 	loop
 	mmplay_opt 7
 	mmplay_opt 1
-	pos 1280-256,720-128
-	objimage 8,0,0
-	objsize 256,128
-	button gosub "",*pause
 	gosub *nextstage
-*main
+
+	// メインループ
 	repeat
 		title "早押しゲーム "+stg+"回 "+time+"秒 Lv."+lv
 		redraw 0
@@ -165,13 +116,21 @@
 		color 0,0,0
 		boxf
 		
-		//あたり判定、画像配置
+		//画像配置
 		gosub *move
 		pos boxx,boxy
 		celput 1
 		if cnt<prev_ok+8 : pos prev_boxx,prev_boxy : celput 1,1
-		stick clk,,0
-		if clk&256 {
+		pos scrx-256,scry-128 : celput 8
+		
+		//文字表示
+		font "",64
+		pos 0,0 : color 255,255,0
+		if mode=1 : mes ""+time+"秒 "+stg+"/50回 Lv."+lv : else : mes ""+time+"秒 "+stg+"回 Lv."+lv
+		
+		redraw 1
+		stick key,,0
+		if key&256 {
 			if mousex>=boxx & mousex<=boxx+200 & mousey>=boxy & mousey<=boxy+200 {
 				mmplay_opt 3
 				prev_boxx=boxx
@@ -180,35 +139,107 @@
 				gosub *nextstage
 				if cleared : break
 			}
+			if mousex>=scrx-256 & mousey>=scry-128 : gosub *pause
 		}
+		if key&16 : gosub *pause
 		if resume : stg-- : gosub *nextstage : resume=0
 
 		// やめる
 		if gvup : break
 		
-		//文字表示
-		font "",64
-		pos 0,0 : color 255,255,0
-		if mode=0 : mes ""+time+"秒 "+stg+"/50回 Lv."+lv : else : mes ""+time+"秒 "+stg+"回 Lv."+lv
-		
-		redraw 1
-		await 16
-		
 		//ループ回数のカウント
-		if mode=0 {
+		if mode=1 {
 			time=cnt/62
 		} else {
 			time=20-cnt/62
 			if time<=0 : cleared=1 : break
 		}
+		await 16
 	loop
 	if gvup : gvup=0 : goto *top
-	if cleared : goto *gameclear
-	stop
+
+	// 結果画面
+	title "早押しゲーム "+stg+"回 "+time+"秒 Lv."+lv
+	clrobj
+	mmstop
+	mmplay_opt 2
+
+	redraw 0
+	gosub *stopsc
+	color 0,255,0
+	font "",128,1
+	pos 400,250
+	mes "FINISH!!"
+	redraw 1
+	await 2000
+
+	cls
+	cleared=0
+	is_record=0
+	if mode=1 {
+		if besttime>time | besttime<0 {
+			besttime=time
+			is_record=1
+			bsave "save.bin",besttime,4
+			bsave "save.bin",beststg,4,4
+		}
+	} else {
+		if beststg<stg {
+			beststg=stg
+			is_record=1
+			bsave "save.bin",besttime,4
+			bsave "save.bin",beststg,4,4
+		}
+	}
+
+	repeat
+		redraw 0
+		color 0,0,0
+		boxf
+
+		color 255,255,0
+		font "",128,1
+		pos 350,50
+		mes "RESULT"
+
+		color 0,255,0
+		font "",64
+		pos 350,240
+		if mode=1 {
+			mes "所要時間: "+time+"秒"
+			mes "最高記録: "+besttime+"秒"
+		} else {
+			mes "回数: "+stg+"回"
+			mes "最高記録: "+beststg+"回"
+		}
+
+		font "",80
+		color 255,255,0
+		pos 350,450 : print "記録更新！"
+		redraw 1
+		stick key
+		if key&(16|32) : break
+		if key&256 {
+			if mousex>=0 & mousex<scrx & mousey>=0 & mousey<scry : break
+		}
+		await 16
+	loop
+	goto *top
+
+*stopsc
+	color 0,0,0
+	boxf
+	pos boxx,boxy
+	if mode=1 : celput 1,cleared : else : celput 1
+	font "",64
+	pos 0,0
+	color 255,255,0
+	if mode=1 : mes ""+time+"秒 "+stg+"/50回 Lv."+lv : else : mes ""+time+"秒 "+stg+"回 Lv."+lv
+	return
 
 *move
-	if boxx<0 | boxx>1280-200 : posx=-posx
-	if boxy<0 | boxy>720-200 : posy=-posy
+	if boxx<0 | boxx>scrx-200 : posx=-posx
+	if boxy<0 | boxy>scry-200 : posy=-posy
 	boxx=boxx+posx
 	boxy=boxy+posy
 	return
@@ -216,10 +247,10 @@
 *nextstage
 	stg=stg+1
 	if resume=0 & stg>0 & stg\10=0 & lv<5 : a=a+2 : lv++
-	if mode=0 & stg=50 : cleared=1 : return
+	if mode=1 & stg=50 : cleared=1 : return
 	
-	boxx=rnd(1280-200)
-	boxy=rnd(720-200)
+	boxx=rnd(scrx-200)
+	boxy=rnd(scry-200)
 	orient=rnd(8)
 	if orient=0 : posx=a : posy=a
 	if orient=1 : posx=-a : posy=a
@@ -237,11 +268,11 @@
 	mmplay_opt 5
 
 	objsize 512,128
-	objimage 9,0,0
-	pos 1280/2-256,320
+	objimage 9,,,,128
+	pos scrx/2-256,320
 	button gosub "",*ctn
-	objimage 10,0,0
-	pos 1280/2-256,320+128
+	objimage 10,,,,128
+	pos scrx/2-256,320+128
 	button gosub "",*giveup
 
 	repeat
@@ -252,13 +283,16 @@
 		pos 420,140
 		mes "PAUSE"
 		redraw 1
+		stick key
+		if key&16 : resume=1
+		if key&128 : gvup=1
 		if resume | gvup : break
 		await 16
 	loop
 
 	if resume : mmplay_opt 5
 	clrobj
-	pos 1280-256,720-128
+	pos scrx-256,scry-128
 	objimage 8,0,0
 	objsize 256,128
 	button gosub "",*pause
@@ -272,99 +306,32 @@
 	gvup=1
 	return
 
-*stopsc
-	color 0,0,0
-	boxf
-	pos boxx,boxy
-	if mode=1 : celput 1 : else : celput 1,cleared
-	font "",64
-	pos 0,0
-	color 255,255,0
-	if mode=0 : mes ""+time+"秒 "+stg+"/50回 Lv."+lv : else : mes ""+time+"秒 "+stg+"回 Lv."+lv
+*timeattack
+	mode=1
 	return
 
-*gameclear
-	title "早押しゲーム "+stg+"回 "+time+"秒 Lv."+lv
-	clrobj
-	mmstop
-	mmplay_opt 2
-
-	redraw 0
-	gosub *stopsc
-	color 0,255,0
-	font "",128,1
-	pos 400,250
-	mes "FINISH!!"
-	redraw 1
-	await 2000
-*result
-	cls
-	cleared=0
-	needsave=0
-	if mode=0 {
-		if besttime>time | besttime<0 {
-			needsave=1
-			besttime=time
-			objimage 11,0,0
-		} else {
-			objimage 10,0,0
-		}
-	} else {
-		if beststg<stg {
-			needsave=1
-			beststg=stg
-			objimage 11,0,0
-		} else {
-			objimage 10,0,0
-		}
-	}
-	objsize 512,128
-	pos 1280/2-256,500
-	button "",*saving
-
-	repeat
-		redraw 0
-		color 0,0,0
-		boxf
-
-		color 255,255,0
-		font "",128,1
-		pos 350,50
-		mes "RESULT"
-
-		color 0,255,0
-		font "",64
-		pos 350,240
-		if mode=0 {
-			mes "かかった時間: "+time+"秒"
-			mes "最高記録: "+besttime+"秒"
-		} else {
-			mes "回数: "+stg+"回"
-			mes "最高記録: "+beststg+"回"
-		}
-		redraw 1
-		await 16
-	loop
-	
-*saving
-	if needsave : bsave "save.bin",besttime,4 : bsave "save.bin",beststg,4,4
-	goto *top
+*countdown
+	mode=2
+	return
 
 *options
 	mmstop
 	mmplay_opt 6
-	cls
+	toopt=1
+	return
 
+*option
+	cls
 	objsize 768,128
-	objimage 5,0,0
-	pos 1280/2-384,220
-	button "",*del_timeattack
-	objimage 6,0,0
-	pos 1280/2-384,220+128
-	button "",*del_countdown
-	objimage 7,0,0
-	pos 1280/2-384,220+256
-	button "",*top
+	objimage 5,,,,128
+	pos scrx/2-384,220
+	button gosub "",*del_timeattack
+	objimage 6,,,,128
+	pos scrx/2-384,220+128
+	button gosub "",*del_countdown
+	objimage 7,,,,128
+	pos scrx/2-384,220+256
+	button gosub "",*top
 
 	repeat
 		redraw 0
@@ -376,14 +343,15 @@
 			color 255,255,0
 			print "初期化すると復元できません！！"
 		redraw 1
+		if is_deleted | is_back : break
 		await 16
 	loop
+	if is_back : is_back=0 : goto *top
 
-*del_after
+	is_deleted=0
 	exist "save.bin"
 	if strsize!-1 : bsave "save.bin",besttime,4 : bsave "save.bin",beststg,4,4
 	cls
-
 	redraw 0
 		pos 0,0 : color 0,0,0 : boxf
 		pos 120,80 : font "",64
@@ -395,11 +363,17 @@
 
 *del_timeattack
 	besttime=-1
-	goto *del_after
+	is_deleted=1
+	return
 
 *del_countdown
 	beststg=-1
-	goto *del_after
+	is_deleted=1
+	return
+
+*del_back
+	is_back=1
+	return
 
 // 音声ファイルが存在する場合のみ mmload する
 #deffunc mmload_opt str mmload_opt_file, int mmload_opt_id, int mmload_opt_mode
