@@ -60,7 +60,7 @@
 	pos 32,260
 	color 0,255,0
 	font msgothic,20
-	if besttime=-1 : mes "タイムアタック記録: なし" : else : mes "タイムアタック記録: "+besttime+" 秒"
+	if besttime=-1 : mes "タイムアタック記録: なし" : else : mes "タイムアタック記録: "+besttime/10+"."+besttime\10+" 秒"
 	if beststg=-1 : mes "カウントダウン記録: なし" : else : mes "カウントダウン記録: "+beststg+" 回"
 	mes "\nタイムアタック: 的を50回クリックする速度を競います。"
 	mes "カウントダウン: 20秒以内に的をクリックした回数を競います。"
@@ -76,7 +76,7 @@
 *countdown
 	mode=2
 	goto *prepare
-	
+
 *prepare
 	mmstop
 	clrobj
@@ -95,9 +95,9 @@
 	mmplay_opt 6
 	mmplay_opt 1
 	gosub *nextstage
-*main
+
 	repeat
-		title "早押しゲーム "+stg+"回 "+time+"秒 Lv."+lv
+		title "早押しゲーム "+stg+"回 "+time/10+"."+time\10+"秒 Lv."+lv
 		
 		redraw 0
 		;color 0,97,189
@@ -111,7 +111,7 @@
 		if cnt<prev_ok+8 : pos prev_boxx,prev_boxy : celput 1,1
 		font msgothic,32
 		pos 0,0 : color 255,255,0
-		if mode=1 : mes ""+time+"秒 "+stg+"/50回 Lv."+lv : else : mes ""+time+"秒 "+stg+"回 Lv."+lv
+		if mode=1 : mes ""+time/10+"."+time\10+"秒 "+stg+"/50回 Lv."+lv : else : mes ""+time/10+"."+time\10+"秒 "+stg+"回 Lv."+lv
 		redraw 1
 		
 		stick clk
@@ -131,64 +131,16 @@
 		await 16
 		
 		if mode=1 {
-			time=cnt/62
+			time=cnt/6
 		} else {
-			time=20-cnt/62
+			time=200-cnt/6
 			if time<=0 : cleared=1 : break
 		}
 	loop
 	if gvup : gvup=0 : goto *top
-	if cleared : goto *gameclear
-	stop
-	
-*move
-	if boxx<0 | boxx>640-100 : posx=-posx
-	if boxy<0 | boxy>480-100 : posy=-posy
-	boxx=boxx+posx
-	boxy=boxy+posy
-	return
-	
-*nextstage
-	stg=stg+1
-	if resume=0 & stg>0 & stg\10=0 & lv<5 : a++ : lv++
-	if mode=1 & stg=50 : cleared=1 : return
-	
-	boxx=rnd(640-100)
-	boxy=rnd(480-100)
-	orient=rnd(8)
-	if orient=0 : posx=a : posy=a
-	if orient=1 : posx=-a : posy=a
-	if orient=2 : posx=a : posy=-a
-	if orient=3 : posx=-a : posy=-a
-	if orient=4 : posx=a*3/2 : posy=0
-	if orient=5 : posx=-a*3/2 : posy=0
-	if orient=6 : posx=0 : posy=a*3/2
-	if orient=7 : posx=0 : posy=-a*3/2
-	return
-	
-*pause
-	title "早押しゲーム "+stg+"回 "+time+"秒 Lv."+lv
-	mmplay_opt 5
-	pos 280,200
-	mes "PAUSE"
-	font msgothic,20 : color 0,255,0
-	pos 130,250
-	mes "Spaceキー:再開　Escキー:タイトルに戻る"
-	mes "再開するとマリオの場所は変わります。"
-	repeat
-		stick key
-		if key&16 : resume=1 : break
-		if key&128 : gvup=1 : break
-		await 16
-	loop
-	if resume : stg=stg-1 : mmplay_opt 5 : gosub *nextstage : resume=0
-	return
 
-*gameclear
-	title "早押しゲーム "+stg+"回 "+time+"秒 Lv."+lv
 	mmstop
 	mmplay_opt 2
-	
 	color 0,0,0
 	boxf
 	pos boxx,boxy
@@ -196,13 +148,13 @@
 	font msgothic,32
 	pos 0,0
 	color 255,255,0
-	if mode=1 : mes ""+time+"秒 "+stg+"/50回 Lv."+lv : else : mes ""+time+"秒 "+stg+"回 Lv."+lv
+	if mode=1 : mes ""+time/10+"."+time\10+"秒 "+stg+"/50回 Lv."+lv : else : mes ""+time/10+"."+time\10+"秒 "+stg+"回 Lv."+lv
 	
 	font msgothic,64,1
 	pos 180,200
 	mes "FINISH!!"
 	await 2000
-*result
+
 	cls 4
 	cleared=0
 	if mode=1 {
@@ -233,8 +185,8 @@
 	font msgothic,32
 	pos 180,210
 	if mode=1 {
-		mes "所要時間: "+time+"秒"
-		mes "最高記録: "+besttime+"秒"
+		mes "所要時間: "+time/10+"."+time\10+"秒"
+		mes "最高記録: "+besttime/10+"."+besttime\10+"秒"
 	} else {
 		mes "回数: "+stg+"回"
 		mes "最高記録: "+beststg+"回"
@@ -254,6 +206,48 @@
 		await 16
 	loop
 	goto *top
+	
+*move
+	if (boxx<=0 & posx<0) | (boxx>=640-100 & posx>0) : posx=-posx
+	if (boxy<=0 & posy<0) | (boxy>=480-100 & posy>0) : posy=-posy
+	boxx+=posx
+	boxy+=posy
+	return
+	
+*nextstage
+	stg=stg+1
+	if resume=0 & stg>0 & stg\10=0 & lv<5 : a++ : lv++
+	if mode=1 & stg=50 : cleared=1 : return
+	
+	boxx=rnd(640-100)
+	boxy=rnd(480-100)
+	orient=rnd(8)
+	if orient=0 : posx=a : posy=a
+	if orient=1 : posx=-a : posy=a
+	if orient=2 : posx=a : posy=-a
+	if orient=3 : posx=-a : posy=-a
+	if orient=4 : posx=a*3/2 : posy=0
+	if orient=5 : posx=-a*3/2 : posy=0
+	if orient=6 : posx=0 : posy=a*3/2
+	if orient=7 : posx=0 : posy=-a*3/2
+	return
+	
+*pause
+	mmplay_opt 5
+	pos 280,200
+	mes "PAUSE"
+	font msgothic,20 : color 0,255,0
+	pos 130,250
+	mes "Spaceキー:再開　Escキー:タイトルに戻る"
+	mes "再開すると的の場所は変わります。"
+	repeat
+		stick key
+		if key&16 : resume=1 : break
+		if key&128 : gvup=1 : break
+		await 16
+	loop
+	if resume : stg=stg-1 : mmplay_opt 5 : gosub *nextstage : resume=0
+	return
 
 // 音声ファイルが存在する場合のみ mmload する
 #deffunc mmload_opt str mmload_opt_file, int mmload_opt_id, int mmload_opt_mode
