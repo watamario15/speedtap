@@ -12,3 +12,4 @@ packfile
 *.data
 *.cpp
 *.html
+__*
