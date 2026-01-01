@@ -14,6 +14,11 @@
  * mode: ゲームモード(0=未選択, 1=Time Attack, 2=Countdown)
  */
 #include "hsp3dish.as"
+#packopt name "SpeedTap"
+#packopt version "version.txt"
+#packopt icon "app.ico"
+#packopt xsize 1280
+#packopt ysize 720
 
 	info_os=sysinfo(0)
 	if instr(info_os,0,"iOS")=-1 & instr(info_os,0,"android")=-1 & instr(info_os,0,"Emscripten")=-1 : assets_dir="data/" : else : assets_dir=""
