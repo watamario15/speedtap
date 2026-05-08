@@ -1,56 +1,63 @@
-# 早押しゲーム
+# Speed Tap
+
+**English** | [日本語](README-ja.md)
 
 ![](title.png)
 ![](play.png)
 ![](result.png)
 
-ランダムに現れる的を素早くクリック／タップする、モグラ叩き的なシンプルなゲームで、タイムアタックモードとカウントダウンモードを収録しています。10 回ごとにレベルが最大 5 まで上がり、レベル 2 以降ではレベルに応じた速度で的が動きます。最高記録の初期化は、Android 版はタイトル画面右下のごみ箱アイコンから行い、Windows 版は実行ファイルと同じ場所に作成される `save.bin` を削除するだけです（レジストリなどは使用しません）。Web 版はリロードすれば消えます。
+A simple whac-a-mole-style game where you quickly click or tap randomly appearing targets. It includes both a Time Attack mode and a Countdown mode. The level increases every 10 hits, up to a maximum of Level 5. From Level 2 onward, the targets move at speeds based on the current level.
 
-## 対応環境
+To reset high scores:
+- On Android, tap the trash can icon at the bottom-right of the title screen.
+- On Windows, simply delete the `save.bin` file created in the same directory as the executable (no registry entries are used).
+- On the Web version, reloading the page will clear the records.
 
-Linux 環境では、HSP3Dish 版スクリプトの文字コードを UTF-8 に変換すれば [Linux 版ランタイム](https://hsp.tv/make/hsp3linux_pi.html)で動作しますが、導入手順が煩雑なため Wine で Windows 版を実行するか Web 版を使う方が手軽です（macOS も同様）。HSP3Dish 版は本来 iOS/iPadOS にも対応していますが、私がビルド環境もテスト環境も持ち合わせないため作成していません（そもそも野良配布できないし...）。
+## Supported Platforms
 
-- Windows XP 以降の日本語版
-  - 開発環境の制約上、日本語ロケールでしか正しく動作しません
-- Android 5 以降
-  - Play Store 等では公開していないので、提供元不明アプリのインストールを有効化した上で、APK からインストールしてください
-- 新しめの Web ブラウザ [Experimental]
-  - Web 版は「とりあえずビルドしてみた」程度で、環境によってはうまく動かない場合があります
-  - 画面をはみ出す環境では全画面モードがおすすめです（縦方向に画面が余ると文字表示が壊れるので、横長状態で全画面化してください）
+On Linux, the game can run with the [HSP3Dish Linux runtime](https://hsp.tv/make/hsp3linux_pi.html) if the script encoding is converted to UTF-8. However, it is generally easier to run the executable through Wine or use the Web version instead (the same applies to macOS) as the setup process is rather complicated. Although the development environment supports iOS/iPadOS, no such version has been built as I do not have either a build or testing environment for them (besides, unofficial distribution is not really possible anyway...).
 
-[Releases](../../releases) から適切なものをダウンロードしてください。Web 版は <https://watamario15.github.io/speedtap/> で遊べます（ロードにそこそこ時間が掛かります）。
+- Japanese versions of Windows XP or later
+  - Due to development environment limitations, the game only works correctly under a Japanese locale
+- Android 5 or later
+  - Since the app is not distributed through the Play Store or similar services, you must enable installation from unknown sources and install it manually from the APK (installation via ADB is also possible)
+- Modern web browsers [Experimental]
+  - The Web version was basically built “just to see if it works,” so it may not work properly depending on the environment
+  - Use fullscreen mode if the game extends beyond the screen (play in landscape orientation as text rendering may break if there is too much vertical space)
 
-## フォルダ構成
+Download the appropriate version from [Releases](../../releases). The Web version can be played at <https://watamario15.github.io/speedtap/> (loading may take a little while).
 
-- [`assets/`](assets/): Windows 版で使う素材
-- [`data/`](data/): HSP3Dish (Android/Web) 版で使う素材（Android ビルド時は Android プロジェクトの `app/src/main/assets/` に配置）
-- [`res/`](res/): Android アプリアイコン（Android ビルド時は Android プロジェクトの `app/src/main/res/` に配置）
-- [`app.ico`](app.ico): Windows アプリアイコン
-- [`SpeedTap.hsp`](SpeedTap.hsp): HSP3Dish (Android/Web) 版ソースコード
-- [`SpeedClick.hsp`](SpeedClick.hsp): Windows 版ソースコード
+## Folder Structure
 
-ソースコードは [Hot Soup Processor 3](https://hsp.tv) のスクリプトエディタで開けます。一般のテキストエディタを使う場合は Shift_JIS (CP932) で開いてください。
+- [`assets/`](assets/): Assets used by the Windows version
+- [`data/`](data/): Assets used by the HSP3Dish (Android/Web) versions (placed in `app/src/main/assets/` when building for Android)
+- [`res/`](res/): Android app icons (placed in `app/src/main/res/` when building for Android)
+- [`app.ico`](app.ico): Windows application icon
+- [`SpeedTap.hsp`](SpeedTap.hsp): Source code for the HSP3Dish (Android/Web) version
+- [`SpeedClick.hsp`](SpeedClick.hsp): Source code for the Windows version
 
-## 各種素材
+The source code can be opened with the script editor included in [Hot Soup Processor 3](https://hsp.tv/) (the latest version including beta versions is recommended for HSP3Dish building). Use Shift_JIS (CP932) encoding for opening if you prefer a third-party editor.
 
-本作品は元は高校時代に練習で作ったものですが、著作権上マズい素材をふんだんに使っていたので、公開にあたり全て置き換えています。
+## Assets
 
-音声素材は、以下の通り [OtoLogic](https://otologic.jp) にて [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.ja) で配布されているものです。効果音は適宜形式変換やカット編集を施しています。
+This project was originally created as personal practice during high school, but it used many copyrighted materials that could not legally be redistributed. All such assets have been replaced for this public release.
 
-- タイトル BGM（`title.mp3`）：[ドタバタパニック](https://otologic.jp/free/bgm/wood_mallet01.html)
-- プレイ中 BGM（`bgm.mp3`）：[ドタバタレース](https://otologic.jp/free/bgm/pop-music-synth01.html)
-- 結果画面 BGM（`result.mp3`）[知恵の輪](https://otologic.jp/free/bgm/electronica01.html)
-- 記録初期化画面 BGM（`config.mp3`）：[Specification](https://otologic.jp/free/bgm/electronica01.html)（Android 版のみ）
-- 的クリック効果音（`ok.wav`）：[サイバー 18](https://otologic.jp/free/se/cyber02.html)
-- カウントダウン効果音（`countdown.wav`, `go.wav`）：[カウントダウン 01](https://otologic.jp/free/se/countdown01.html)
-- 一時停止効果音（`pause.wav`）：[サイバー 17](https://otologic.jp/free/se/cyber02.html)
+The audio assets listed below are distributed under the [CC-BY-4.0](LICENSE.OtoLogic) from [OtoLogic](https://otologic.jp/). Sound effects were converted or trimmed as needed.
 
-画像素材は以下の通りです。
+- Title screen BGM (`title.mp3`): [Dotabata Panic](https://otologic.jp/free/bgm/wood_mallet01.html)
+- In-game BGM (`bgm.mp3`): [Dotabata Race](https://otologic.jp/free/bgm/pop-music-synth01.html)
+- Result screen BGM (`result.mp3`): [Puzzle Ring](https://otologic.jp/free/bgm/electronica01.html)
+- Record reset screen BGM (`config.mp3`, Android version only): [Specification](https://otologic.jp/free/bgm/electronica01.html)
+- Target hit sound (`ok.wav`): [Cyber 18](https://otologic.jp/free/se/cyber02.html)
+- Countdown sounds (`countdown.wav`, `go.wav`): [Countdown 01](https://otologic.jp/free/se/countdown01.html)
+- Pause sound (`pause.wav`): [Cyber 17](https://otologic.jp/free/se/cyber02.html)
 
-- 的（`target.png`）：ペイントで適当に作ったもので、Public Domain ([CC0-1.0](LICENSE)) とします（Windows 版はこれだけ）
-- ゴミ箱（`reset.png`）：[SVG Repo](https://www.svgrepo.com/) で CC0-1.0 で配布されている [Delete SVG Vector](https://www.svgrepo.com/svg/171102/delete) です
-- その他ボタン類：ペイントで適当に作ったものですが、文字は [OFL-1.1](https://openfontlicense.org/) で提供される [BIZ UDPGothic](https://github.com/googlefonts/morisawa-biz-ud-gothic) を使用しています（私の作業分については著作権を主張しません）
+The image assets are as follows:
 
-## 著作権
+- Target (`target.png`): Created casually in MS Paint and released into the public domain under [CC0-1.0](LICENSE) (This is the only image used in the Windows version)
+- Trash can (`reset.png`): [Delete SVG Vector on SVG Repo](https://www.svgrepo.com/svg/171102/delete), distributed under CC0-1.0
+- Other buttons and UI elements: Also created casually in MS Paint. The text uses [BIZ UDPGothic](https://github.com/googlefonts/morisawa-biz-ud-gothic), distributed under the [SIL Open Font License 1.1](https://openfontlicense.org/). I do not claim copyright over my own contributions to these assets.
 
-ソースコードは著作権を放棄し Public Domain ([CC0-1.0](LICENSE)) で配布します。画像素材・音声素材は前節の通りです。
+## Copyright
+
+The source code is released into the public domain under [CC0-1.0](LICENSE). Image and audio assets are licensed as described in the previous section.
